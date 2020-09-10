@@ -1,0 +1,95 @@
+---
+- hosts: localhost
+  gather_facts: yes
+  become: yes
+  become_user: root
+  tasks:
+    - name: Check OS Type and Version
+      assert:
+        that: "ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7' or ansible_os_family == 'CentOS' and ansible_distribution_major_version == '7'"
+        success_msg: "The ansible playbook supported current OS"
+        fail_msg: "The ansible playbook does not support current OS"
+
+    - name: Setup /etc/hosts
+      lineinfile:
+        dest: /etc/hosts
+        line: "{{ ansible_default_ipv4.address }} {{ ansible_fqdn }}"
+        state: present
+
+    - name: Ping The hostname
+      ping: "{{ ansible_fqdn }}"
+
+    - name: Clean The Yum Cache
+      command: yum clean all
+      args:
+        warn: no
+
+    - name: Enable The EPEL RPM Repository
+      yum:
+        name:
+          - epel-release
+        state: latest
+
+    - name: Update All RPM Packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Install Prerequisite RPM Packages
+      yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+          - vim
+          - dstat
+          - htop
+          - git
+          - wget
+          - net-tools
+          - bind-utils
+          - nmap
+          - axel
+        state: latest
+
+    - name: Remove The Previous Docker RPM Packages
+      yum:
+        name:
+          - docker
+          - docker-client
+          - docker-client-latest
+          - docker-common
+          - docker-latest
+          - docker-latest-logrotate
+          - docker-logrotate
+          - docker-engine
+        state: absent
+
+    - name: Add The Docker RPM Repository
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Install The Docker RPM Packages
+      yum:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+
+    - name: Enable The Docker Systemd Service
+      systemd:
+        name: docker.service
+        state: started
+        enabled: yes
+
+    - name: Install The Docker Compose Binary File
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-linux-x86_64"
+        dest: /usr/local/bin/docker-compose
+        mode: "0755"
+
+    - name: Add /usr/local/bin to $PATH
+      copy:
+        dest: /etc/profile.d/custom-bin.sh
+        content: "export PATH=$PATH:/usr/local/bin"
