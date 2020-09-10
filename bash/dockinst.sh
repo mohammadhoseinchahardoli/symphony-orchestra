@@ -1,12 +1,12 @@
 #!/bin/bash
-# File Name    : dockerinstallation.sh
+# File Name    : dockinst.sh
 # Author       : Mohammad Hosein Chahardoli
 # Description  : This bash script install docker-ce and docker-compose.
-# Call Syntax  : bash dockerinstallation.sh
-# Requirements : It must run with bash.
+# Call Syntax  : bash dockinst.sh
+# Requirements : It must run with root privilege.
 # Last Modified: 09/08/2019
 # exit status
-# 127		wronge OS
+# 127		wrong OS
 # -----------------------------------------------------------------------------------
 function osversioncheck {
 	# Must be Enterprise Linux 7.x
